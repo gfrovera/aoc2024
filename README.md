@@ -1,8 +1,11 @@
 advent of code 2024
 ===================
 
+My personal repo for Advent of Code. Using python! Lets see how far I can get 🙂
 
-Thank you to @anthonywritescode for building and sharing this AoC Template repo.
+---
+
+Thank you to @anthonywritescode for building and sharing this AoC Template repo. Follow his twitch and youtubes! 💯
 
 https://adventofcode.com/2024
 
