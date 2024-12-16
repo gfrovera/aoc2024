@@ -22,7 +22,10 @@
 
 #### Steps
 
-1. Import each line in input as list element in a list of lists
+1. Import each line in input as list element in a list of lists   
 2. For each line (_floor_) determine if criteria for _safe_ is met
-3. Build binary list of safe/unsafe where safe is 1
-4. Sum up all items in list to determine # of safe floors.
+3. Calculate the diff between n[i] - n[i]+1
+  - This was my initial thought of evaluating the differences. If they were between 1 and 3. This didnt work with lists that had an increase _and_ a decrease. Problem summary stated that the _all_ have to increase or decrease. This method masked that.
+4. Just evaluate if all elements are increasing or decreasing by no more than 3 or less than 1.
+  - Found that I could utilize all() to evaluate the change accross all elements. if they all meet the criteria then append `True` to a list. If they dont all increase or decrease then append `False` to a list.
+  - Once list of `bool` is returned, `sum` all `True` values in list to get the answer?
