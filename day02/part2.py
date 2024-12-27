@@ -1,10 +1,15 @@
-# Day Two: Part 1
-# tst_slice = 2
+from typing import Iterator
+
+
 tst_slice = None
-ResultList = list[list[int]]
+InputList = list[list[int]]
 SafetyList = list[bool]
 
-def input_splitter(input_path: str) -> ResultList:
+tst_input = [1, 2, 7, 8, 9]
+tst_input2 = [1, 3, 6, 7, 9]
+
+
+def input_splitter(input_path: str) -> InputList:
 
     list_of_lists = []
 
@@ -14,58 +19,100 @@ def input_splitter(input_path: str) -> ResultList:
 
     return list_of_lists
 
-def find_list_element_diff(input: ResultList ) -> ResultList:
-    
-    input_diffs = []
 
-    for idx, lst in enumerate(input):
-        diff_results = []
-        for idxx in range(len(lst)-1):
-            val_diffs = lst[idxx] - lst[idxx+1]
-            diff_results.append(val_diffs)
-        
-        input_diffs.append(diff_results)
+class FloorSafetyEvaluator:
 
-    return input_diffs
-  
-def evaluate_floor_saftey(input: ResultList) -> SafetyList:
+    def __init__(self, floor_list: InputList) -> None:
+        self.floor_list = floor_list
 
-    floor_status =[]
+    def floor_evaluator(self, input: list[int]) -> bool:
+        '''Evaluates if single floor: list[int] is Safe/Unsafe'''
 
-    for idx, lst in enumerate(input):
-        if all(0 < (lst[i] - lst[i-1]) < 4 for i in range(1, len(lst))):
-            floor_safe = True
-        elif all(-4 < (lst[i] - lst[i-1]) < 0 for i in range(1, len(lst))):
-            floor_safe = True
+        if all(0 < (input[i] - input[i-1]) < 4 for i in range(1, len(input))):
+            return True
+        elif all(-4 < (input[i] - input[i-1]) < 0 for i in range(1, len(input))):
+            return True
         else:
-            floor_safe= False
+            return False
+
+    def evaluate_all_floors(self) -> SafetyList:
+        '''Evaluate all floor lists in the input list of lists'''
+
+        floor_sts_list = []
+
+        for idx, lst in enumerate(self.floor_list):
+            floor_sts_list.append(self.floor_evaluator(lst))
+
+        return floor_sts_list
+
+
+class FloorReEvaluator(FloorSafetyEvaluator):
+
+    def __init__(self,  floor_list: InputList) -> None:
+        super().__init__(floor_list)
+
+    def mark_floor_unsafe(self) -> Iterator[tuple[bool, list[int]]]:
+        initial_results = self.evaluate_all_floors()
+        floors_with_status = zip(initial_results, self.floor_list)
+        return floors_with_status
+
+    def extract_unsafe(self, results: Iterator[tuple[bool, list[int]]]) -> InputList:
+        recheck_list: InputList = []
+        for sts, lst in results:
+            if not sts:
+                recheck_list.append(lst)
         
-        floor_status.append(floor_safe)
+        return recheck_list
+    
+    def create_recheck_list(self) -> InputList:
 
-    return floor_status
+        recheck_list = (
+            self.extract_unsafe(
+                self.mark_floor_unsafe()
+                )
+            )
 
-def unsafe_floors(status_input: SafetyList, list_input: ResultList) -> ResultList:
-    combined_inputs = zip(status_input, list_input)
+        return recheck_list
 
-    # Extract Unsafe (False) Lists
-    dbl_check_list = []
-    for sts, lst in combined_inputs:
-        if not sts:
-            dbl_check_list.append(lst)
+    def recheck_floor_status(self, recheck_list: InputList) -> SafetyList:
+        
+        iter_results = []
 
-    return dbl_check_list
+        for idx, lst in enumerate(recheck_list):
+            inner_results = []
+            for idy, flr in enumerate(lst):
+                retest_lst =  lst[:idy]  + lst[idy+1:]
+                if self.floor_evaluator(retest_lst):
+                    inner_results.append(True)
+                else:
+                    inner_results.append(False)
+            
+            iter_results.append(inner_results)
+
+        return iter_results
+    
+    def final_safe_flr_cnt(self, iter_result_list: list[list[bool]]) -> int:
+
+        add_safe_floors = []
+        for val in iter_result_list:
+            add_safe_floors.append(any(val))
+        
+        return sum(add_safe_floors)
+        
+        
 
 if __name__ == '__main__':
-
-    input_list: list[list[int]] = (
-        input_splitter('test_input.txt')[:tst_slice]
-        )
-    safety_list = evaluate_floor_saftey(input_list)
-
-    dbl_check_these = unsafe_floors(safety_list, input_list)
+ 
+    input_list = input_splitter('part1_input.txt')
+    floor_evaluator = FloorReEvaluator(input_list)
+    safe_floor_list = floor_evaluator.evaluate_all_floors()
+    print('...')
 
 
-    print(len(safety_list))
-    print(sum(safety_list))
-    print(list(zip(safety_list, input_list)))
-    print(dbl_check_these)
+
+    safe_floor_list = floor_evaluator.mark_floor_unsafe()
+    recheck_list = floor_evaluator.create_recheck_list()
+    inner_checks = floor_evaluator.recheck_floor_status(recheck_list)
+    additional_flr_lst = floor_evaluator.final_safe_flr_cnt(inner_checks)
+    part_two_answer = sum(safe_floor_list) + additional_flr_lst
+    print(part_two_answer)
